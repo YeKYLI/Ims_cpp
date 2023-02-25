@@ -2,66 +2,43 @@
 #define PROCEDURE
 
 #include <string>
+#include <iostream>
 #include <sipMessage.h>
 
 using std::string;
+using std::cout;
+using std::endl;
 
-int sendMessage(char* buf, int len, char* ip)
+static int udpSockFd = -1;
+static int tcpSockFd = -1; // 后期会改成在消息里、、多个UE肯定会出现问题的
+
+void sendUdpMessage(char* buf, int len, char* ip)
 {
-    
-    int sockFd = socket(AF_INET, SOCK_DGRAM, 0);
-    if(sockFd < 0)
+    if(udpSockFd == -1)
     {
-        printf("Error: create udp send socket failed !!!\n");
-        return -1;
-    }
-    
-    struct sockaddr_in clientAddr;
-    clientAddr.sin_family = AF_INET;
-    clientAddr.sin_port = htons(5060);
-    clientAddr.sin_addr.s_addr = inet_addr("192.168.0.1");
-    if(bind(sockFd, (struct sockaddr*)&clientAddr, sizeof(clientAddr)))
-    {
-        printf("Error: cannot bind the udp port\n");
-        return -1;
+        cout << "Error: the udp socket fd is wrong !!!" << endl;
     }
 
     struct sockaddr_in serverAddr;
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_port = htons(5060);
-    ip = "6.6.6.6";
     serverAddr.sin_addr.s_addr = inet_addr(ip);
-    if(connect(sockFd, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) < 0)
+    if(connect(udpSockFd, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) < 0)
     {
-        printf("Error: cannot connect the udp port\n");
-        return -1;
+        printf("Error: cannot connect the udp port \n");
+        return ;
     }
 
-    int length = int(write(sockFd, buf, len));
+    int length = int(write(udpSockFd, buf, len));
     if(length < 0)
     {
-        printf("send socket failed !!!");
+        printf("send udp message  failed !!!");
     }
-
 }
 
 void invite(SipMessage msg)
 {
-
-char* test = "Hello, word !!!";
-
-sendMessage(test, strlen(test), "6.6.6.6");
-
-
-return;
-
-// 
-    // UE2 发包
-
-    char* buf = (char*)(malloc(3000));
-    char* p = buf;
-    int len = 0;
-
+    /*
     // 200 OK
     string firstLine = "200 OK \r\n";
     memcpy(p, firstLine.c_str(), firstLine.size());
@@ -70,23 +47,64 @@ return;
     string To = "To: " + msg.headers[string("To")] + "\r\n";
     memcpy(p, firstLine.c_str(), firstLine.size());
 
-    // 
-    //
+    */
 
-    // UE1 响应
+    // 向 UE1 回应
+
+
+
+    // 给UE 1 回复 100 TRYING
+
+cout << "Xxxxxxx" << endl;
+    char* sendBuf = (char*)(malloc(10000));
+    char* p = sendBuf;
+    int len = 0;
+
+    string firstLine = "Status-Line: SIP/2.0 100 Trying\r\n";
+    memcpy(p, firstLine.c_str(), firstLine.size());
+    p += firstLine.size();
+    len += firstLine.size();
+
+    string from = "XXX \r\n";
+
+    int n = write(tcpSockFd, sendBuf, 10);
+    if(n < 0)
+    {
+        cout << "response tcp message failed !!!" << endl;
+    }
 }
 
+/*
+void register(SipMessage msg)
+{
+    // to do
+}
+
+*/
 
 void procedure(SipMessage msg)
 {
+    // 四大流程
     if(msg.firstLine.at(0) == 'I')
     {
         invite(msg);
     }
+    else if(msg.firstLine.at(0) == 'R')
+    {
+        //register(msg);
+    }
+    else if(msg.firstLine.at(0) == 'S')
+    {
+        //subscribe(msg);
+    }
+    else if(msg.firstLine.at(0) == 'B')
+    {
+        //bye(msg);
+    }
+    else
+    {
+        cout << "Error: bad message format : " << msg.firstLine << endl;
+    }
 }
 
-// 回复消息
-//
-//
-//
 #endif

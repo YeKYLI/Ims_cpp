@@ -16,6 +16,8 @@
 using std::endl;
 using std::cout;
 using std::thread;
+extern int udpSockFd;
+extern int tcpSockFd;
 
 int tcpServer()
 {
@@ -49,18 +51,22 @@ int tcpServer()
     while(1)
     {
         memset(&clientAddr, 0, sizeof(clientAddr));
- 
+
+        printf("Info: waiting for tcp accept \n");
         int connfd = accept(sockFd, &clientAddr, (socklen_t*)&clientAddrLen);//使用accept从消息队列中获取请求 
         if (connfd < 0) 
         { 
             printf("Error: accept tcp failed !!!\n");
             return -1; 
         }
-
+        else
+        {
+            tcpSockFd = connfd;
+        }
         char* buf = (char*)(malloc(10000));
         //struct sockaddr_in clientAddr;
         //int clientAddrLen = sizeof(clientAddr);
-	while(1)
+	    while(1)
         {
             
 	    //int len = recvfrom(connfd, buf, 10000, 0,  (struct sockaddr*)&clientAddr, (socklen_t*)&clientAddrLen);
@@ -89,6 +95,9 @@ int udpServer()
         return -1;
     }
 
+    udpSockFd = sockFd;
+    //printf("TEST: udp sockFd = %d \n", udpSockFd);
+
     struct sockaddr_in serverAddr;
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_port = htons(5060);
@@ -100,38 +109,10 @@ int udpServer()
         return -1;
     }
 
-    printf("Info: listening udp message.........\n");
+    printf("Info: listening udp message \n");
 
     struct sockaddr_in clientAddr;
     int clientAddrLen = sizeof(clientAddr);
-
-/// TEST
-
-
- serverAddr.sin_addr.s_addr = inet_addr("6.6.6.6");
- if(connect(sockFd, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) < 0)
- {
-        printf("Error: cannot connect the udp port\n");
-        return -1;
- }
-int length = int(write(sockFd, "xxxxxxxxxxxxx", 5));
-    if(length < 0)
-    {
-        printf("send socket failed !!!");
-    }
-
- serverAddr.sin_addr.s_addr = inet_addr("7.7.7.7");
- if(connect(sockFd, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) < 0)
- {
-        printf("Error: cannot connect the udp port\n");
-        return -1;
- }
-length = int(write(sockFd, "yyyyyyyyy", 6));
-    if(length < 0)
-    {
-        printf("send socket failed !!!");
-    }
-
 
     char* buf = (char*)(malloc(2000));
     while(1)
@@ -150,7 +131,7 @@ length = int(write(sockFd, "yyyyyyyyy", 6));
 }
 
 
-int makeServer()
+int server()
 {
     thread tcpThread(tcpServer);
     thread udpThread(udpServer);
@@ -158,11 +139,6 @@ int makeServer()
     tcpThread.join();
     udpThread.join();
     
-    //pthread_create(&tcpThread, NULL, tcPServer, NULL);
-    //pthread_create(&udpThread, NULL, udpServer, NULL);
-
-    //pthread_join(tcpThread, NULL);
-    //pthread_join(udpThread, NULL);
     return 0;
 }
 

@@ -4,9 +4,11 @@
 
 using namespace std;
 
+
+
 int main()
 {
-    makeServer();
+    server();
 
     cout << "Hello, word !!!" << endl;
 

@@ -1,8 +1,4 @@
-IMS流程
-
-1. 打电话流程
-
-1.1 IMS接收UE1的INVITE信息后，向UE2发送INVITE信息
+MS接收UE1的INVITE信息后，向UE2发送INVITE信息
 
 1.2 IMS向UE2发送消息后，向UE1发送100 TRING
 
@@ -21,3 +17,4 @@ IMS流程
 2. 构建第二条INVITE 消息
 
 3. 测试可以发出180 RING 200 OK，或者直接撸代码
+~                                              :q!
