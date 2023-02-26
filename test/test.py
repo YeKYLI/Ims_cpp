@@ -128,16 +128,16 @@ tcpSock.connect((serverAddr, serverPort))
 #tcpSock.close()
 
 
-#message = format(REGISTER)
-#tcpSock.send(message)
+message = format(REGISTER)
+tcpSock.send(message)
 
 #message = format(subscribe)
 #message = b'HEllo word'
 #udpSock.sendto(message, server_address)
 
-## test invite
-message = format(invite)
-tcpSock.send(message)
+### test invite
+#message = format(invite)
+#tcpSock.send(message)
 
 #exit
 

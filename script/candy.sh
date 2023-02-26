@@ -1,7 +1,7 @@
 
 pkill a.out
 
-g++ -Wwrite-strings -I src/ src/main.cc -std=c++11 -pthread -o a.out
+g++ -ggdb -Wwrite-strings -I src/ src/main.cc -std=c++11 -pthread -o a.out
 
 ./a.out &
 

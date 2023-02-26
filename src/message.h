@@ -12,9 +12,7 @@ using std::string;
 using std::cout;
 using std::endl;
 
-
-
-void processMessage(SipMessage message)
+void processMessage(SipMessage& message)
 {
     vector<string> headers =  message.splitString(message.buf, '\n');
 
@@ -36,13 +34,13 @@ void processMessage(SipMessage message)
             continue;
         }
 
-	if(headers[i].size() <  headerParts[0].size() + 2)
+	    if(headers[i].size() <  headerParts[0].size() + 2)
         {
             cout << "Error: bad header body format,  fatal error !!!" << endl;
             continue;
         }
 
-        message.headers[headerParts[0]] = headers[i].substr(headerParts[0].size() + 2, headers[i].size() - 2 - headerParts[0].size());
+        message.headers[headerParts[0]] = headers[i].substr(headerParts[0].size() + 2, headers[i].size() - 3 - headerParts[0].size());
 
         //cout << "Info: key " << headerParts[0] << " val " << message.headers[headerParts[0]] << endl;
 
@@ -58,27 +56,57 @@ void processMessage(SipMessage message)
         }
 
     }
-    
-    procedure(message);
-
 }
  
-void processBuf(char* buf, int len)
+void processBuf(char* buf, int len, int type)
 {
-    
-    //假设我们这里已经收到了完整的数据包
-    //
-    // 这是一个很重要的假设，后边所有的处理都依赖于这个假设
-    
+    //cout << buf << " | | | | " << endl;
+
+    string& stringBuf = udpStringBuf;
+    if(type == 2)
+    {
+        stringBuf = tcpStringBuf;
+    }
+
     SipMessage msg;
-    msg.buf = string(buf, 0, len);
-    
-    processMessage(msg);
-    
-        
+    msg.buf = stringBuf + string(buf, 0, len);
+
     // 检查是否是一个完整的SIP包
+    processMessage(msg);
+    if(msg.headers.find(string("Content-Length")) != msg.headers.end())
+    {
+        int contentLen = std::stoi(msg.headers[string("Content-Length")]);
+        cout << contentLen << endl;
 
+        // 找到Content-Length在字符串的位置
+        string ContentLength = string("Content-Length: ") + 
+                               string(msg.headers[string("Content-Length")]) +
+                               string("\r\n");
+        int position = msg.buf.find(ContentLength);
+        // check one
+        if(position == -1)
+        {
+            stringBuf = msg.buf;
+            return ;
+        }
+        // check two
+        if(position + contentLen + ContentLength.size() < msg.buf.size())
+        {
+            stringBuf = msg.buf;
+            return ;
+        }
+        else
+        {
+            stringBuf = string("");
+            procedure(msg);
+        }
 
+    }
+    else
+    {
+        stringBuf = msg.buf;
+        return ;
+    }
 }
 
 #endif

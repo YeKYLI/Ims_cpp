@@ -18,6 +18,31 @@ using std::cout;
 using std::thread;
 extern int udpSockFd;
 extern int tcpSockFd;
+ 
+int tcpWorker(int connfd)
+{
+     char* buf = (char*)(malloc(10000));
+    //struct sockaddr_in clientAddr;
+    //int clientAddrLen = sizeof(clientAddr);
+	while(1)
+    {
+        
+        //int len = recvfrom(connfd, buf, 10000, 0,  (struct sockaddr*)&clientAddr, (socklen_t*)&clientAddrLen);
+        int len = read(connfd, buf, 10000); 
+        if (len <= 0) 
+        { 
+            continue;
+            //printf("Error: recv bad tcp message \n");
+        }
+        
+        printf("recv new tcp message\n");
+
+        processBuf(buf, len, 2);
+
+    }
+
+    return 1;
+}
 
 int tcpServer()
 {
@@ -40,7 +65,7 @@ int tcpServer()
         return -1; 
     }
 
-    if(listen(sockFd, 5))
+    if(listen(sockFd, 100))
     {
         printf("Errot: listen tcp socket failed");
         return -1;
@@ -63,26 +88,10 @@ int tcpServer()
         {
             tcpSockFd = connfd;
         }
-        char* buf = (char*)(malloc(10000));
-        //struct sockaddr_in clientAddr;
-        //int clientAddrLen = sizeof(clientAddr);
-	    while(1)
-        {
-            
-	    //int len = recvfrom(connfd, buf, 10000, 0,  (struct sockaddr*)&clientAddr, (socklen_t*)&clientAddrLen);
-            int len = read(connfd, buf, 10000); 
-            if (len <= 0) 
-            { 
-                //这里有个重大bug，阻塞在一起
-                continue;
-                //printf("Error: recv bad tcp message \n");
-            }
-            
-            printf("recv new tcp message\n");
 
-            processBuf(buf, len);
+        thread tcpWorkerThread(tcpWorker, connfd);
+        tcpWorkerThread.join();
 
-        }
     }
 }
 
@@ -126,7 +135,7 @@ int udpServer()
         printf("Received message from IP: %s and port: %i\n",
                 inet_ntoa(clientAddr.sin_addr), ntohs(clientAddr.sin_port));
     
-        processBuf(buf, len);
+        processBuf(buf, len, 1);
     }
 }
 

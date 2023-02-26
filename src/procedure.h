@@ -1,6 +1,7 @@
 #ifndef PROCEDURE
 #define PROCEDURE
 
+#include <string.h>
 #include <string>
 #include <iostream>
 #include <sipMessage.h>
@@ -11,6 +12,8 @@ using std::endl;
 
 static int udpSockFd = -1;
 static int tcpSockFd = -1; // 后期会改成在消息里、、多个UE肯定会出现问题的
+string udpStringBuf("");
+string tcpStringBuf("");
 
 void sendUdpMessage(char* buf, int len, char* ip)
 {
