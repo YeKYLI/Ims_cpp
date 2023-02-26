@@ -68,7 +68,7 @@ void processBuf(char* buf, int len)
     
     //假设我们这里已经收到了完整的数据包
     //
-    // 这是一个很重要的假设，如果
+    // 这是一个很重要的假设，后边所有的处理都依赖于这个假设
     
     SipMessage msg;
     msg.buf = string(buf, 0, len);

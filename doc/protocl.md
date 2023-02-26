@@ -1,29 +1,26 @@
+## 重点
 
-IMS流程
+### Call-ID
 
-1. 打电话流程
+### TAG
 
-1.1 IMS接收UE1的INVITE信息后，向UE2发送INVITE信息
+### branch
 
-1.2 IMS向UE2发送消息后，向UE1发送100 TRING
+### VIA
 
-1.3 IMS收到UE2的100 TRING 后，不为所动
+上面这几个IE是问题的关键
 
-1.4 IMS收到UE2的180 RING后，向UE1发送180 RING
+1 invite
 
-1.5 IMS收到UE2的200 OK后，向UE1发送200 OK        ｜｜ 此时 UE1和IMS的TCP连接关闭
+1.1 IMS接收UE1的INVITE信息后，向UE2发送INVITE信息，向UE1发送100 TRING
 
-1.6 IMS收到UE1的ACK后，向UE2 发送ACK，            ｜｜ 至此打电话的业务结束
+1.2 IMS收到UE2的100 TRING 后，不为所动
 
-工程开发步骤一
+1.3 IMS收到UE2的180 RING后，向UE1发送180 RING
 
-1. 测试IMS接收UE1的消息后，可以向UE2发送信息
+1.4 IMS收到UE2的200 OK后，向UE1发送200 OK        ｜｜ 此时 UE1和IMS的TCP连接关闭
 
-2. 构建第二条INVITE 消息
-
-3. 测试可以发出180 RING 200 OK，或者直接撸代码
-~                                              
-
+1.5 IMS收到UE1的ACK后，向UE2 发送ACK，           ｜｜ 至此打电话的业务结束
 
 # REGISTER 
 
