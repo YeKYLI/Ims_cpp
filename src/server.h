@@ -10,15 +10,39 @@
 #include <stdlib.h>
 #include <iostream>
 #include <thread>
+#include <map>
+#include <algorithm>
 #include <message.h>
-//#include "../lib/ims/ims_getters.h"
 
 using std::endl;
 using std::cout;
 using std::thread;
+using std::map;
 extern int udpSockFd;
 extern int tcpSockFd;
- 
+
+vector<string> splitString(string str, char ch)
+{
+    vector<string> res;
+    str += ch;
+    int start = 0;
+    int last = str.find(ch);
+    while(last < int(str.size()))
+    {
+        if(start != last)
+        {
+            res.push_back(str.substr(start, last - start));
+        }
+        start = last + 1;
+        last = str.find(ch, start);
+        if((-1 == start) || (-1 == last))
+        {
+            return res;
+        }
+    }
+    return res;
+}
+
 int tcpWorker(int connfd)
 {
      char* buf = (char*)(malloc(10000));
@@ -37,7 +61,7 @@ int tcpWorker(int connfd)
         
         printf("recv new tcp message\n");
 
-        processBuf(buf, len, 2);
+        processBuf(buf, len, 2, connfd);
 
     }
 
@@ -57,7 +81,7 @@ int tcpServer()
     memset(&serverAddr, 0, sizeof(serverAddr));  
     serverAddr.sin_family       = AF_INET; 
     serverAddr.sin_port         = htons(5060); 
-    serverAddr.sin_addr.s_addr  = inet_addr("192.168.0.1");  
+    serverAddr.sin_addr.s_addr  = inet_addr(ip.c_str());  
 
     if (bind(sockFd, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) < 0)//绑定套接字 
     {
@@ -110,7 +134,7 @@ int udpServer()
     struct sockaddr_in serverAddr;
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_port = htons(5060);
-    serverAddr.sin_addr.s_addr = inet_addr("192.168.0.1");
+    serverAddr.sin_addr.s_addr = inet_addr(ip.c_str());
 
     if(bind(sockFd, (struct sockaddr*)&serverAddr, sizeof(serverAddr)))
     {
@@ -135,13 +159,52 @@ int udpServer()
         printf("Received message from IP: %s and port: %i\n",
                 inet_ntoa(clientAddr.sin_addr), ntohs(clientAddr.sin_port));
     
-        processBuf(buf, len, 1);
+        processBuf(buf, len, 1, sockFd);
     }
 }
 
 
 int server()
 {
+    FILE* cfgFile = fopen("cscfcfg.yaml", "r");
+    if(cfgFile != NULL)
+    {
+	char str[1000];
+        while(fgets(str, 999, cfgFile) != NULL)
+        {
+            //cout << str << endl;
+ 	    
+ 	    string curr(str);
+
+    	    auto output = splitString(curr, ':');
+            if(output.size() == 2)
+	    {
+  	       
+	//	cout << output[1] <<  "||" << endl;
+		std::replace(output[1].begin(), output[1].end(),'\n', '\0');
+		ip = output[1];
+	//	cout << ip << endl;
+	//	cout << output[1] <<  "||" << endl;
+
+	    }
+	    if(output.size() == 3)
+	    {
+		std::replace(output[2].begin(), output[2].end(),'\n', '\0');
+		imsiPhone[output[1]] = output[2];
+	//	cout << imsiPhone[output[1]] << endl;
+		 
+            }
+        }
+        
+
+        fclose(cfgFile);
+    }
+    else
+    {
+        cout << "Bad Cfg File !!!" << endl;
+        return 1;
+    }
+
     thread tcpThread(tcpServer);
     thread udpThread(udpServer);
 

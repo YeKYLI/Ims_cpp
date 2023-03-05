@@ -10,11 +10,6 @@ using std::string;
 using std::cout;
 using std::endl;
 
-static int udpSockFd = -1;
-static int tcpSockFd = -1; // 后期会改成在消息里、、多个UE肯定会出现问题的
-string udpStringBuf("");
-string tcpStringBuf("");
-
 void sendUdpMessage(char* buf, int len, char* ip)
 {
     if(udpSockFd == -1)
@@ -37,6 +32,20 @@ void sendUdpMessage(char* buf, int len, char* ip)
     {
         printf("send udp message  failed !!!");
     }
+}
+
+
+void copyStringToBuff(string curr, char** p, int* len)
+{
+    memcpy(*p, curr.c_str(), curr.size());
+    *p += curr.size();
+    *len += curr.size();
+}
+
+string newTag()
+{
+    string output = string("hello435643646") + std::to_string(count ++);
+    return output;
 }
 
 void invite(SipMessage msg)
@@ -204,19 +213,174 @@ void bye(SipMessage msg)
 
 void subscribe(SipMessage msg)
 {
+// 200 OK
+
+    char* sendBuf = (char*)(malloc(10000));
+    char* p = sendBuf;
+    int len = 0;
+
+    copyStringToBuff(string("SIP/2.0 200 OK\r\n"), &p, &len);
+
+	string curr = string("Via:SIP/2.0/TCP ") + msg.ip + string(":5060;branch=z9hG4bKIIecbPJdlaSIPpeaaOpY;received=") + msg.ip + string(";rport=5060")+ string("\r\n");
+	copyStringToBuff(curr, &p, &len);
+
+	curr = string("Contact: <sip:") + ip + string(":11004;transport=UDP>\r\n");
+	copyStringToBuff(curr, &p, &len);
+
+	curr = string("CSeq: ") + msg.headers[string("CSeq")] +  string("\r\n");
+    copyStringToBuff(curr, &p, &len);
+
+	curr = string("Call-ID: ") + msg.headers[string("Call-ID")] +  string("\r\n");
+    copyStringToBuff(curr, &p, &len);
+
+	string tag = newTag();
+	curr = string("To: ") + msg.headers[string("To")] + string(";tag=") +  tag +  string("\r\n");
+    copyStringToBuff(curr, &p, &len);
+
+	curr = string("Expires: ") + msg.headers[string("Expires")] +  string("\r\n");
+    copyStringToBuff(curr, &p, &len);
+
+	curr = string("From: ") + msg.headers[string("From")] + string("\r\n");
+	copyStringToBuff(curr, &p, &len);
+
+	curr = string("Content-Length: ") + msg.headers[string("Content-Length")] +  string("\r\n");
+    copyStringToBuff(curr, &p, &len);
+
+
+    curr = string("\r\n");
+    copyStringToBuff(curr, &p, &len);
+	
+    int n = write(tcpSockFd, sendBuf, len);
+    if(n < 0)
+    {
+        cout << "response tcp message failed !!!" << endl;
+    }
+
+//  NOTIFY
+ 
+
+    p = sendBuf;
+    len = 0;
+
+
+	curr = string("NOTIFY sip:") + msg.imsi + string("@") + msg.ip + string(":5060 SIP/2.0\r\n");
+    copyStringToBuff(curr, &p, &len);
+
+	curr = string("Via:SIP/2.0/TCP ") + msg.ip + string(":5060;branch=z9hG4bKNOT000001PX00003300000300000;received=") + msg.ip + string(";rport=5060")+ string("\r\n");
+	copyStringToBuff(curr, &p, &len);
+
+	curr = string("Record-Route:<sip:PX000000330300000000@1") + ip + string(":5060;lr>\r\n");
+	copyStringToBuff(curr, &p, &len);
+
+	curr = string("CSeq:1 NOTIFY");
+	copyStringToBuff(curr, &p, &len);
+
+	curr = string("Call-ID: ") + msg.headers[string("Call-ID")] +  string("\r\n");
+    copyStringToBuff(curr, &p, &len);
+
+	curr = string("Max-Forward: ") + std::to_string(std::atoi(msg.headers[string("Max-Forward")].c_str()) - 1) + string("\r\n");
+    copyStringToBuff(curr, &p, &len);
+
+	curr = string("To: ") + msg.headers[string("To")] + string(";tag=") +  tag +  string("\r\n");
+    copyStringToBuff(curr, &p, &len);
+
+	curr = string("From: ") + msg.headers[string("From")] + string("\r\n");
+    copyStringToBuff(curr, &p, &len);
+
+	curr = string("Content-Type:application/reginfo+xml") + string("\r\n");
+	copyStringToBuff(curr, &p, &len);
+
+	curr = string("Subscription-State:active") + string("\r\n");
+	copyStringToBuff(curr, &p, &len);
+
+	curr = string("Event:reg") + string("\r\n");
+	copyStringToBuff(curr, &p, &len);
+
+	curr = string("Content-Length:525") + string("\r\n");
+	copyStringToBuff(curr, &p, &len);
+
+	curr = string("\r\n");
+	copyStringToBuff(curr, &p, &len);
+
+	curr = string("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n") + \
+		string("<reginfo version=\"1\" state=\"full\"><registration state=\"active\" aor=\"sip:") +  \
+		msg.imsi + string("@") + msg.domain + string("\" id=\"1\"><contact state=\"active\" id=\"1\" event=\"created\"><uri>sip:") + \
+		msg.imsi + string("@") + msg.ip + \
+		string(":5060</uri></contact></registration><registration state=\"active\" aor=\"tel:") + \
+		msg.phone + string(";phone-context=") + msg.domain + \
+		string("\" id=\"2\"><contact state=\"active\" id=\"1\" event=\"created\"><uri>sip:") + \
+		msg.imsi + string("@") + msg.ip + \
+		string("</uri></contact></registration></reginfo>");
+	copyStringToBuff(curr, &p, &len);
+
+
+free(sendBuf);
+
     return ;
 }
 
 void regist(SipMessage msg)
 {
+	imsiFdMap[msg.imsi] =msg.fd;
+
+    char* sendBuf = (char*)(malloc(10000));
+    char* p = sendBuf;
+    int len = 0;
+
+    copyStringToBuff(string("SIP/2.0 200 OK\r\n"), &p, &len);
+
+	string curr = string("Via:SIP/2.0/TCP ") + msg.ip + string(":5060;branch=z9hG4bKtFecbjeD1Gn8tbdaaypY;received=") + msg.ip + string(";rport=5060")+ string("\r\n");
+	copyStringToBuff(curr, &p, &len);
+
+	curr = string("Contact: <sip:") + msg.imsi + string("@") + msg.ip + string(":5060>;expires=") + msg.headers[string("Expires")] + 
+				  string(";+sip.instance=") + msg.contactMap[string("+sip.instance=")] + string("\r\n");
+	copyStringToBuff(curr, &p, &len);
+
+	curr = string("CSeq: ") + msg.headers[string("CSeq")] +  string("\r\n");
+    copyStringToBuff(curr, &p, &len);
+
+	curr = string("Call-ID: ") + msg.headers[string("Call-ID")] +  string("\r\n");
+    copyStringToBuff(curr, &p, &len);
+
+	curr = string("To: ") + msg.headers[string("To")] + string(";tag=") +  newTag() +  string("\r\n");
+    copyStringToBuff(curr, &p, &len);
+
+	curr = string("Expires: ") + msg.headers[string("Expires")] +  string("\r\n");
+    copyStringToBuff(curr, &p, &len);
+	
+    curr = string("From: ") + msg.headers[string("From")] + string("\r\n");
+    copyStringToBuff(curr, &p, &len);
+
+	curr = string("Service-Route:<sip:orig@") + ip + string(":11004;transport=udp;lr>\r\n"); //感觉这部分可以不用添加，待测试
+    copyStringToBuff(curr, &p, &len);
+
+	curr = string("Path:Path:<sip:term@")+ ip + string(":12004;lr>") + string("\r\n");
+	copyStringToBuff(curr, &p, &len);
+
+	curr = string("P-Associated-URI:<sip:")+ msg.imsi + msg.domain + string(">") + string("\r\n");
+	copyStringToBuff(curr, &p, &len);
+
+	curr = string("P-Associated-URI:<tel:")+ msg.phone + string(";phone-context=") +  msg.domain + string(">") + string("\r\n");
+	copyStringToBuff(curr, &p, &len);
+
+	curr = string("Content-Length: ") + msg.headers[string("Content-Length")] +  string("\r\n");
+    copyStringToBuff(curr, &p, &len);
+
+    curr = string("\r\n");
+    copyStringToBuff(curr, &p, &len);    
+
+    int n = write(tcpSockFd, sendBuf, len);
+    if(n < 0)
+    {
+        cout << "Error: regist response tcp message failed !!!" << endl;
+    }
+
+    free(sendBuf);
+
     return ;
 }
-void copyStringToBuff(string curr, char** p, int* len)
-{
-    memcpy(*p, curr.c_str(), curr.size());
-    *p += curr.size();
-    *len += curr.size();
-}
+
+
 
 void ring(SipMessage msg)
 {
@@ -275,6 +439,7 @@ void ring(SipMessage msg)
 void procedure(SipMessage msg)
 {
     
+	
     if(msg.firstLine.at(0) == 'I')
     {
         invite(msg);

@@ -2,7 +2,6 @@ import socket
 import sys
 
 
-
 serverAddr = "192.168.0.1"
 serverPort = 5060
 

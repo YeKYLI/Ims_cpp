@@ -9,21 +9,63 @@ using std::string;
 using std::map;
 using std::vector;
 
+static int udpSockFd = -1;
+static int tcpSockFd = -1; // 后期会改成在消息里、、多个UE肯定会出现问题的
+string udpStringBuf("");
+string tcpStringBuf("");
+string ip;
+map<string, string> imsiPhone;
+static int count = 1;
+
+
 class SipMessage
 {
     public:
 
     vector<string> splitString(string str, char ch);
 
+    string imsi;
+
+	string phone;
+	
+    string domain;
+
+	string ip;
+
     string firstLine;
 
     map<string, string> headers;
 
-    string content;        
+	map<string, string> contactMap;
+
+    string content;
+
+	int fd;
 
     string buf;
 
+
 } ;
+
+map<string, int> imsiFdMap; // temport design
+
+
+/*
+
+class state
+{
+	string imsi;
+
+	SipMessage register;
+	SipMessage subscribe;
+	SipMessage invite;
+	SipMessage bye;
+} ;
+
+map<string, state> stateMachine;
+*/
+
+
 
 
 vector<string> SipMessage::splitString(string str, char ch)

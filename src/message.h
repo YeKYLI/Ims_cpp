@@ -6,11 +6,34 @@
 #include <iostream>
 #include <sipMessage.h>
 #include <procedure.h>
-
+  
 using std::vector;
 using std::string;
 using std::cout;
 using std::endl;
+
+void processContact(SipMessage& msg)
+{
+	//cout << "Debug: processing contact" << endl;
+
+	string contact = msg.headers[string("Contact")];
+
+	cout << "Debug : Contact = " << contact << endl;
+
+	vector<string> headers =  msg.splitString(contact, ';');
+
+	for(int i = 0; i < headers.size(); i ++)
+	{
+		vector<string> parts = msg.splitString(headers[i], '=');
+		if(parts.size() == 2)
+		{
+			msg.contactMap[parts[0]] = parts[1];
+
+			cout << "Debug: key = " << parts[0] << "value = " << msg.contactMap[parts[0]] << endl;
+		}
+	}
+}
+
 
 void processMessage(SipMessage& message)
 {
@@ -44,6 +67,33 @@ void processMessage(SipMessage& message)
 
         //cout << "Info: key " << headerParts[0] << " val " << message.headers[headerParts[0]] << endl;
 
+		if(strcmp(headerParts[0].c_str(), "From") == 0) // trick
+		{
+			message.imsi = message.headers[headerParts[0]].substr(message.headers[headerParts[0]].find(':') + 1,
+					message.headers[headerParts[0]].find('@') - message.headers[headerParts[0]].find(':') - 1);
+			cout << "Debug: imsi = " << message.imsi << endl;
+
+			message.phone = imsiPhone[message.imsi];
+			cout << "Debug: phone = " << message.phone << endl;
+			
+			message.domain = message.headers[headerParts[0]].substr(message.headers[headerParts[0]].find('@') + 1,
+					message.headers[headerParts[0]].find('>') - message.headers[headerParts[0]].find('@') - 1);
+			cout << "Debug: domain = " << message.domain << endl;
+		}
+
+		if(strcmp(headerParts[0].c_str(), "Call-ID") == 0) // trick
+		{
+			message.ip = message.headers[headerParts[0]].substr(message.headers[headerParts[0]].find('@') + 1,
+					message.headers[headerParts[0]].size() - message.headers[headerParts[0]].find('@') - 1);
+			cout << "Debug: ip = " << message.ip << endl;
+		}
+
+		if(strcmp(headerParts[0].c_str(), "Contact") == 0) // trick
+		{
+			processContact(message);
+		} 
+
+
         if(strcmp(headerParts[0].c_str(), "Content-Length") == 0) 
         {
 	    int contentLen = std::stoi(message.headers[headerParts[0]]);
@@ -56,9 +106,9 @@ void processMessage(SipMessage& message)
         }
 
     }
-}
+}   
  
-void processBuf(char* buf, int len, int type)
+void processBuf(char* buf, int len, int type, int fd)
 {
     //cout << buf << " | | | | " << endl;
 
@@ -73,6 +123,7 @@ void processBuf(char* buf, int len, int type)
 
     // 检查是否是一个完整的SIP包
     processMessage(msg);
+	msg.fd = fd;
     if(msg.headers.find(string("Content-Length")) != msg.headers.end())
     {
         int contentLen = std::stoi(msg.headers[string("Content-Length")]);
@@ -90,7 +141,7 @@ void processBuf(char* buf, int len, int type)
             return ;
         }
         // check two
-        if(position + contentLen + ContentLength.size() < msg.buf.size())
+        if(position + contentLen + ContentLength.size() + 2 < msg.buf.size())
         {
             stringBuf = msg.buf;
             return ;

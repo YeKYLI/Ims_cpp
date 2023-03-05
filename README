@@ -10,5 +10,85 @@ sudo usermod -aG docker silence
 
 ssh silence@106.54.177.27 'sudo tcpdump -s0 -i any -c   10000 -nn -w - not port 22' | /Applications/Wireshark.app/Contents/MacOS/Wireshark -k -i -
 
+# invite
+
+// go here
+
+// 
+
+# bye
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+From: <sip:001010000011103@ims.mnc001.mcc001.3gppnetwork.org>;tag=GKecbPJ
+
+REGISTER sip:ims.mnc001.mcc001.3gppnetwork.org SIP/2.0
+To: <sip:001010000011103@ims.mnc001.mcc001.3gppnetwork.org>
+From: <sip:001010000011103@ims.mnc001.mcc001.3gppnetwork.org>;tag=sEecbje
+Contact: <sip:001010000011103@181.0.123.63:5060>;+sip.instance="<urn:gsma:imei:86728604-148067-0>";+g.3gpp.accesstype="cellular2";audio;video;+g.3gpp.smsip;+g.3gpp.icsi-ref="urn%3Aurn-7%3A3gpp-service.ims.icsi.mmtel"
+Expires: 600000
+P-Access-Network-Info: 3GPP-NR-TDD;utran-cell-id-3gpp=0010100313200001C001
+Supported: path,sec-agree
+Allow: INVITE,ACK,OPTIONS,BYE,CANCEL,UPDATE,PRACK,NOTIFY,MESSAGE,REFER
+Require: sec-agree
+Proxy-Require: sec-agree
+Security-Client: ipsec-3gpp;alg=hmac-sha-1-96;prot=esp;mod=trans;ealg=des-ede3-cbc;spi-c=35223458;spi-s=62940225;port-c=31549;port-s=31943,ipsec-3gpp;alg=hmac-sha-1-96;prot=esp;mod=trans;ealg=aes-cbc;spi-c=35223458;spi-s=62940225;port-c=31549;port-s=31943,ipsec-3gpp;alg=hmac-sha-1-96;prot=esp;mod=trans;ealg=null;spi-c=35223458;spi-s=62940225;port-c=31549;port-s=31943,ip
+sec-3gpp;alg=hmac-md5-96;prot=esp;mod=trans;ealg=des-ede3-cbc;spi-c=35223458;spi-s=62940225;port-c=31549;port-s=31943,ipsec-3gpp;alg=hmac-md5-96;prot=esp;mod=trans;ealg=aes-cbc;spi-c=35223458;spi-s=62940225;port-c=31549;port-s=31943,ipsec-3gpp;alg=hmac-md5-96;prot=esp;mod=trans;ealg=null;spi-c=35223458;spi-s=62940225;port-c=31549;port-s=31943
+
+SIP/2.0 200 Ok OK
+Via:SIP/2.0/TCP 181.0.123.63:5060;branch=z9hG4bKtFecbjeD1Gn8tbdaaypY;received=181.0.123.63;rport=5060
+Contact: <sip:001010000011103@181.0.123.63:5060>;expires=600000;+sip.instance="<urn:gsma:imei:86728604-148067-0>"
+CSeq: 1 REGISTER
+Call-ID: rDecbjeD1@181.0.123.63
+To: <sip:001010000011103@ims.mnc001.mcc001.3gppnetwork.org>;tag=BWDxS22Jjz
+Expires: 600000
+From: <sip:001010000011103@ims.mnc001.mcc001.3gppnetwork.org>;tag=sEecbje
+Service-Route:<sip:orig@172.16.1.203:11004;transport=udp;lr>
+Path:<sip:term@172.16.1.201:12004;lr>
+P-Associated-URI:<sip:001010000011103@ims.mnc001.mcc001.3gppnetwork.org>
+P-Associated-URI:<tel:13800011103;phone-context=ims.mnc001.mcc001.3gppnetwork.org>
+Content-Length:0
 
 
