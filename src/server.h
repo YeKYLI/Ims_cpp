@@ -191,6 +191,7 @@ int server()
 	    {
 		std::replace(output[2].begin(), output[2].end(),'\n', '\0');
 		imsiPhone[output[1]] = output[2];
+        phoneImsi[output[2]] = output[1];
 	//	cout << imsiPhone[output[1]] << endl;
 		 
             }

@@ -81,6 +81,11 @@ void processMessage(SipMessage& message)
 			cout << "Debug: domain = " << message.domain << endl;
 		}
 
+        if(strcmp(headerParts[0].c_str(), "To") == 0) // trick
+        {
+
+        }
+
 		if(strcmp(headerParts[0].c_str(), "Call-ID") == 0) // trick
 		{
 			message.ip = message.headers[headerParts[0]].substr(message.headers[headerParts[0]].find('@') + 1,

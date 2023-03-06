@@ -11,10 +11,53 @@ sudo usermod -aG docker silence
 ssh silence@106.54.177.27 'sudo tcpdump -s0 -i any -c   10000 -nn -w - not port 22' | /Applications/Wireshark.app/Contents/MacOS/Wireshark -k -i -
 
 # invite
+SIP/2.0 183 Session Progress
+From: <sip:001010000011103@ims.mnc001.mcc001.3gppnetwork.org>;tag=JRecbPJ
+To: "13800011101"<tel:13800011101;phone-context=ims.mnc001.mcc001.3gppnetwork.org>;tag=JVhcbZE
+P-Preferred-Identity: <tel:13800011101;phone-context=ims.mnc001.mcc001.3gppnetwork.org>
+P-Access-Network-Info: 3GPP-NR-TDD;utran-cell-id-3gpp=0010100313200001C001
+Contact: <sip:001010000011101@181.0.123.53:5060>;+g.3gpp.icsi-ref="urn%3Aurn-7%3A3gpp-service.ims.icsi.mmtel";audio;video;+g.3gpp.mid-call;+g.3gpp.srvcc-alerting
+Allow: INVITE,ACK,OPTIONS,BYE,CANCEL,UPDATE,INFO,PRACK,NOTIFY,MESSAGE,REFER
+Require: 100rel,precondition
+Call-ID: IQecbPJdl@181.0.123.63
+CSeq: 1 INVITE
+Record-Route: <sip:PX000000320400010000@172.16.1.201:11009;lr>
+Record-Route: <sip:PX000000320400010000@172.16.1.203:11009;lr>
+Record-Route: <sip:PX000000320400010000@172.16.1.202:12009;lr>
+Record-Route: <sip:PX000000320300010000@172.16.1.203:12008;lr>
+Record-Route: <sip:PX000000320300010000@172.16.1.201:12008;lr>
+Via: SIP/2.0/TCP 172.16.1.201:11009;branch=z9hG4bKINV000001PX00003200000400100
+Via: SIP/2.0/UDP 172.16.1.203:4060;branch=z9hG4bKINV000001PX00003200000400100
+Via: SIP/2.0/UDP 172.16.1.202:12009;branch=z9hG4bKINV000001PX00003200000400100
+Via: SIP/2.0/UDP 172.16.1.203:12008;branch=z9hG4bKINV000001PX00003200000300100
+Via: SIP/2.0/UDP 172.16.1.201:12008;branch=z9hG4bKINV000001PX00003200000300100
+Via: SIP/2.0/TCP 181.0.123.63:5060;branch=z9hG4bKGSecbzrEbWA9EBeaaypY;received=181.0.123.63;rport=5060
+RSeq: 1
+User-Agent: IM-client/OMA1.0 HW-Rto/V1.0
+Content-Type: application/sdp
+Content-Length: 485
 
-// go here
-
-// 
+SIP/2.0 183 Session Progress
+Via: SIP/2.0/TCP 181.0.123.63:5060;branch=z9hG4bKGSecbzrEbWA9EBeaaypY;received=181.0.123.63;rport=5060
+Record-Route: <sip:PX000000320400010000@172.16.1.201:11009;lr>
+Record-Route: <sip:PX000000320400010000@172.16.1.203:11009;lr>
+Record-Route: <sip:PX000000320400010000@172.16.1.202:12009;lr>
+Record-Route: <sip:PX000000320300010000@172.16.1.203:12008;lr>
+Record-Route: <sip:PX000000320300010000@172.16.1.201:12008;lr>
+Contact: <sip:001010000011101@181.0.123.53:5060>;+g.3gpp.icsi-ref="urn%3Aurn-7%3A3gpp-service.ims.icsi.mmtel";audio;video;+g.3gpp.mid-call;+g.3gpp.srvcc-alerting
+CSeq: 1 INVITE
+Call-ID: IQecbPJdl@181.0.123.63
+To: "13800011101"<tel:13800011101;phone-context=ims.mnc001.mcc001.3gppnetwork.org>;tag=JVhcbZE
+Allow: INVITE,ACK,OPTIONS,BYE,CANCEL,UPDATE,INFO,PRACK,NOTIFY,MESSAGE,REFER
+Require: 100rel,precondition
+From: <sip:001010000011103@ims.mnc001.mcc001.3gppnetwork.org>;tag=JRecbPJ
+Content-Type: application/sdp
+P-Access-Network-Info: 3GPP-NR-TDD;utran-cell-id-3gpp=0010100313200001C001
+P-Asserted-Identity:<tel:13800011101;phone-context=ims.mnc001.mcc001.3gppnetwork.org>
+P-Asserted-Identity:<sip:001010000011101@ims.mnc001.mcc001.3gppnetwork.org>
+RSeq: 1
+User-Agent: IM-client/OMA1.0 HW-Rto/V1.0
+Content-Length: 485
 
 # bye
 
