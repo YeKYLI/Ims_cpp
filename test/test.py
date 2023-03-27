@@ -2,7 +2,7 @@ import socket
 import sys
 
 
-serverAddr = "192.168.0.1"
+serverAddr = "10.88.120.164"
 serverPort = 5060
 
 REGISTER = """REGISTER sip:one.att.net SIP/2.0\r\n\

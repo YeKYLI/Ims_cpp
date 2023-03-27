@@ -1,29 +1,44 @@
 #ifndef SIP_MESSAGE
 #define SIP_MESSAGE
 
+#include <string.h>
 #include <string>
 #include <map>
+#include <unordered_map>
 #include <vector>
 
 using std::string;
 using std::map;
 using std::vector;
+using std::unordered_map;
 
 static int udpSockFd = -1;
-static int tcpSockFd = -1; // 后期会改成在消息里、、多个UE肯定会出现问题的
-string udpStringBuf("");
-string tcpStringBuf("");
 string ip;
-map<string, string> imsiPhone;
-map<string, string> phoneImsi;
-static int count = 1;
 
+map<string, string> imsiPhone; // waiting for optimization !!!
+map<string, string> phoneImsi;
+
+class State
+{
+public:
+	string fromTag;
+	string toTag;
+	string viaBranch;
+	string callId;
+	string ip;
+	string imsi;
+	string domain;
+	string pairPhone;
+	int fd;
+};
+
+map<string, State> phoneState;
 
 class SipMessage
 {
     public:
 
-    vector<string> splitString(string str, char ch);
+    //vector<string> splitString(string str, char ch);
 
     string imsi;
 
@@ -31,7 +46,7 @@ class SipMessage
 	
     string domain;
 
-	string ip;
+	string ip; 
 
     string firstLine;
 
@@ -48,28 +63,34 @@ class SipMessage
 
 } ;
 
-map<string, int> imsiFdMap; // temport design
-
-
-/*
-
-class state
+void updateState(string phone, char* type, string value, int fd = 1)
 {
-	string imsi;
+	State state;
+	if(phoneState.find(phone) != phoneState.end())
+	{
+		state = phoneState[phone];
+	}
+	if(strcmp(type, "fromTag") == 0) state.fromTag = value;
+	if(strcmp(type, "toTag") == 0) state.toTag = value;
+	if(strcmp(type, "viaBranch") == 0) state.viaBranch = value;
+	if(strcmp(type, "callId") == 0) state.callId = value;
+	if(strcmp(type, "ip") == 0) state.ip = value;
+	if(strcmp(type, "imsi") == 0) state.imsi = value;
+	if(strcmp(type, "domain") == 0) state.domain = value;
+	if(strcmp(type, "pairPhone") == 0) state.pairPhone = value;
+	if(strcmp(type, "fd") == 0) state.fd = fd;
 
-	SipMessage register;
-	SipMessage subscribe;
-	SipMessage invite;
-	SipMessage bye;
-} ;
+	phoneState[phone] = state;
+	
+}
 
-map<string, state> stateMachine;
-*/
-
-
+string cutString(string str, char left, char right)
+{
+   	return str.substr(str.find(left) + 1, str.find(right) - str.find(left) - 1);
+}
 
 
-vector<string> SipMessage::splitString(string str, char ch)
+vector<string> splitString(string str, char ch)
 {
     vector<string> res;
     str += ch;

@@ -14,22 +14,21 @@ using std::endl;
 
 void processContact(SipMessage& msg)
 {
-	//cout << "Debug: processing contact" << endl;
 
 	string contact = msg.headers[string("Contact")];
 
-	cout << "Debug : Contact = " << contact << endl;
+	//cout << "Debug : Contact = " << contact << endl;
 
-	vector<string> headers =  msg.splitString(contact, ';');
+	vector<string> headers =  splitString(contact, ';');
 
 	for(int i = 0; i < headers.size(); i ++)
 	{
-		vector<string> parts = msg.splitString(headers[i], '=');
+		vector<string> parts = splitString(headers[i], '=');
 		if(parts.size() == 2)
 		{
 			msg.contactMap[parts[0]] = parts[1];
 
-			cout << "Debug: key = " << parts[0] << "value = " << msg.contactMap[parts[0]] << endl;
+	//		cout << "Debug: key = " << parts[0] << " value = " << msg.contactMap[parts[0]] << endl;
 		}
 	}
 }
@@ -37,7 +36,7 @@ void processContact(SipMessage& msg)
 
 void processMessage(SipMessage& message)
 {
-    vector<string> headers =  message.splitString(message.buf, '\n');
+    vector<string> headers = splitString(message.buf, '\n');
 
     if(headers.size() < 1)
     {
@@ -49,11 +48,11 @@ void processMessage(SipMessage& message)
 
     for(int i = 1; i < headers.size(); i ++)
     {
-        vector<string> headerParts = message.splitString(headers[i], ':');
+        vector<string> headerParts = splitString(headers[i], ':');
 
         if(headerParts.size() < 2)
         {
-            cout << "Error: bad message  format, fatal error !!!" << endl;
+            cout << "Error: bad message  format, fatal error !!!" << __LINE__ << endl;
             continue;
         }
 
@@ -71,14 +70,14 @@ void processMessage(SipMessage& message)
 		{
 			message.imsi = message.headers[headerParts[0]].substr(message.headers[headerParts[0]].find(':') + 1,
 					message.headers[headerParts[0]].find('@') - message.headers[headerParts[0]].find(':') - 1);
-			cout << "Debug: imsi = " << message.imsi << endl;
+			//cout << "Debug: imsi = " << message.imsi << endl;
 
 			message.phone = imsiPhone[message.imsi];
-			cout << "Debug: phone = " << message.phone << endl;
+			//cout << "Debug: phone = " << message.phone << endl;
 			
 			message.domain = message.headers[headerParts[0]].substr(message.headers[headerParts[0]].find('@') + 1,
 					message.headers[headerParts[0]].find('>') - message.headers[headerParts[0]].find('@') - 1);
-			cout << "Debug: domain = " << message.domain << endl;
+			//cout << "Debug: domain = " << message.domain << endl;
 		}
 
         if(strcmp(headerParts[0].c_str(), "To") == 0) // trick
@@ -90,12 +89,12 @@ void processMessage(SipMessage& message)
 		{
 			message.ip = message.headers[headerParts[0]].substr(message.headers[headerParts[0]].find('@') + 1,
 					message.headers[headerParts[0]].size() - message.headers[headerParts[0]].find('@') - 1);
-			cout << "Debug: ip = " << message.ip << endl;
+			//cout << "Debug: ip = " << message.ip << endl;
 		}
 
 		if(strcmp(headerParts[0].c_str(), "Contact") == 0) // trick
 		{
-			processContact(message);
+			 processContact(message);
 		} 
 
 
@@ -112,57 +111,54 @@ void processMessage(SipMessage& message)
 
     }
 }   
- 
-void processBuf(char* buf, int len, int type, int fd)
+
+
+void processBuf(char* buf, int len, int fd, string& rawString)
 {
-    //cout << buf << " | | | | " << endl;
+	//cout << string(buf, 0, len) << endl;
 
-    string& stringBuf = udpStringBuf;
-    if(type == 2)
-    {
-        stringBuf = tcpStringBuf;
-    }
+	if(len > 100 && string(buf, 0, 100).find("SIP/2.0") < len && string(buf, 0, 100).find("SIP/2.0") >= 0  )  // TRICK
+	{
+		rawString = string(buf, 0, len);
+		//cout << "INFO: head rawString = " << endl << rawString << endl;
 
-    SipMessage msg;
-    msg.buf = stringBuf + string(buf, 0, len);
+	}
+	else
+	{
+		rawString += string(buf, 0, len);
+		//cout << "INFO: middle rawString = " << endl << rawString << endl;
+	}
 
-    // 检查是否是一个完整的SIP包
+	if(rawString.size() > 8000)
+	{
+		rawString = string("");
+	}
+	
+    SipMessage msg;    
+    msg.buf = rawString;
     processMessage(msg);
-	msg.fd = fd;
+    msg.fd = fd;
+
+	
+
     if(msg.headers.find(string("Content-Length")) != msg.headers.end())
     {
+	
         int contentLen = std::stoi(msg.headers[string("Content-Length")]);
-        cout << contentLen << endl;
-
-        // 找到Content-Length在字符串的位置
-        string ContentLength = string("Content-Length: ") + 
-                               string(msg.headers[string("Content-Length")]) +
-                               string("\r\n");
-        int position = msg.buf.find(ContentLength);
-        // check one
-        if(position == -1)
+        string ContentLengthIe = string("Content-Length: ") + msg.headers[string("Content-Length\r\n")] ;
+        int position = msg.buf.find(ContentLengthIe);	
+	
+        // position + contentLen + ContentLength.size() + 2 ==  msg.buf.size()
+        if(position + contentLen + ContentLengthIe.size()  < msg.buf.size())
         {
-            stringBuf = msg.buf;
-            return ;
-        }
-        // check two
-        if(position + contentLen + ContentLength.size() + 2 < msg.buf.size())
-        {
-            stringBuf = msg.buf;
-            return ;
-        }
-        else
-        {
-            stringBuf = string("");
             procedure(msg);
+	    	rawString = string("");
         }
 
+		// 赌一把，赌不会截断IE，这里不再做判断，概率还是很低的
+
     }
-    else
-    {
-        stringBuf = msg.buf;
-        return ;
-    }
+
 }
 
 #endif

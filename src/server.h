@@ -6,6 +6,7 @@
 #include <sys/socket.h> 
 #include <arpa/inet.h> 
 #include <netinet/in.h>
+#include <netinet/tcp.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
@@ -18,36 +19,13 @@ using std::endl;
 using std::cout;
 using std::thread;
 using std::map;
-extern int udpSockFd;
-extern int tcpSockFd;
-
-vector<string> splitString(string str, char ch)
-{
-    vector<string> res;
-    str += ch;
-    int start = 0;
-    int last = str.find(ch);
-    while(last < int(str.size()))
-    {
-        if(start != last)
-        {
-            res.push_back(str.substr(start, last - start));
-        }
-        start = last + 1;
-        last = str.find(ch, start);
-        if((-1 == start) || (-1 == last))
-        {
-            return res;
-        }
-    }
-    return res;
-}
 
 int tcpWorker(int connfd)
 {
      char* buf = (char*)(malloc(10000));
     //struct sockaddr_in clientAddr;
     //int clientAddrLen = sizeof(clientAddr);
+    string rawString = string("");
 	while(1)
     {
         
@@ -56,12 +34,11 @@ int tcpWorker(int connfd)
         if (len <= 0) 
         { 
             continue;
-            //printf("Error: recv bad tcp message \n");
         }
         
-        printf("recv new tcp message\n");
+     //   printf("INFO: recving tcp message\n");
 
-        processBuf(buf, len, 2, connfd);
+        processBuf(buf, len, connfd, rawString);
 
     }
 
@@ -101,20 +78,24 @@ int tcpServer()
     {
         memset(&clientAddr, 0, sizeof(clientAddr));
 
-        printf("Info: waiting for tcp accept \n");
+        printf("INFO: waiting tcp accept \n");
         int connfd = accept(sockFd, &clientAddr, (socklen_t*)&clientAddrLen);//使用accept从消息队列中获取请求 
         if (connfd < 0) 
         { 
             printf("Error: accept tcp failed !!!\n");
             return -1; 
         }
-        else
-        {
-            tcpSockFd = connfd;
-        }
+		else
+		{
+			int flag = 1;
+			setsockopt(connfd, IPPROTO_TCP, TCP_NODELAY, &flag, sizeof(int));
 
+			cout << "INFO: tcp connfd = " << connfd << endl;
+		}
+
+		
         thread tcpWorkerThread(tcpWorker, connfd);
-        tcpWorkerThread.join();
+        tcpWorkerThread.detach();
 
     }
 }
@@ -142,74 +123,74 @@ int udpServer()
         return -1;
     }
 
-    printf("Info: listening udp message \n");
+    printf("INFO: listening udp message \n");
 
     struct sockaddr_in clientAddr;
     int clientAddrLen = sizeof(clientAddr);
 
-    char* buf = (char*)(malloc(2000));
+    char* buf = (char*)(malloc(10000));
+	string rawString = string("");
     while(1)
     {
-        int len = recvfrom(sockFd, buf, 2000, 0,  (struct sockaddr*)&clientAddr, (socklen_t*)&clientAddrLen);
+        int len = recvfrom(sockFd, buf, 10000, 0,  (struct sockaddr*)&clientAddr, (socklen_t*)&clientAddrLen);
         if(len < 0)
         {
             printf("Error: Recieve bad udp message");
             continue;
         }
-        printf("Received message from IP: %s and port: %i\n",
-                inet_ntoa(clientAddr.sin_addr), ntohs(clientAddr.sin_port));
+		//printf("INFO: recving udp message ip = %s port = %i \n", inet_ntoa(clientAddr.sin_addr), ntohs(clientAddr.sin_port));
     
-        processBuf(buf, len, 1, sockFd);
+        processBuf(buf, len, sockFd, rawString);
     }
 }
 
 
 int server()
 {
-    FILE* cfgFile = fopen("cscfcfg.yaml", "r");
+    FILE* cfgFile = fopen("cscf.cfg", "r");
     if(cfgFile != NULL)
     {
-	char str[1000];
+		char str[1000];
         while(fgets(str, 999, cfgFile) != NULL)
         {
-            //cout << str << endl;
  	    
- 	    string curr(str);
-
+ 	    	string curr(str);
     	    auto output = splitString(curr, ':');
             if(output.size() == 2)
-	    {
+	   		{
   	       
-	//	cout << output[1] <<  "||" << endl;
-		std::replace(output[1].begin(), output[1].end(),'\n', '\0');
-		ip = output[1];
-	//	cout << ip << endl;
-	//	cout << output[1] <<  "||" << endl;
+				curr += string("xxxxxx");
+				std::replace(curr.begin(), curr.end(),'\n', ':');
+				ip = splitString(curr, ':')[1];
 
-	    }
-	    if(output.size() == 3)
-	    {
-		std::replace(output[2].begin(), output[2].end(),'\n', '\0');
-		imsiPhone[output[1]] = output[2];
-        phoneImsi[output[2]] = output[1];
-	//	cout << imsiPhone[output[1]] << endl;
-		 
-            }
-        }
+	    	}
+		    if(output.size() > 2)
+		    {
+		    	curr += string("xxxxxx");
+				std::replace(curr.begin(), curr.end(),'\n', ':');
+				auto output = splitString(curr, ':');
+				
+		    	
+				imsiPhone[output[1]] = output[2];
+	            //phoneImsi[output[2]] = output[1];
+		      //  cout << output[1] << " || " << output[2] << endl;
+			}
+	   }
         
 
-        fclose(cfgFile);
+       fclose(cfgFile);
     }
     else
     {
-        cout << "Bad Cfg File !!!" << endl;
+        cout << "Error: cannot fine the cfg file !!!" << endl;
         return 1;
     }
+
 
     thread tcpThread(tcpServer);
     thread udpThread(udpServer);
 
-    tcpThread.join();
+    tcpThread.detach();
     udpThread.join();
     
     return 0;
